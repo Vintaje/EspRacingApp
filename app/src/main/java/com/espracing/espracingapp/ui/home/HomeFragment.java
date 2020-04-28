@@ -14,38 +14,47 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.espracing.espracingapp.R;
+import com.espracing.espracingapp.REST.APIUtils;
+import com.espracing.espracingapp.REST.UsuariosRest;
+import com.espracing.espracingapp.REST.model.Usuario;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
 
-    private HomeViewModel homeViewModel;
+
+    private UsuariosRest usuariosRest;
+    private TextView textView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
-                ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
-        final TextView textView = root.findViewById(R.id.text_home);
-        homeViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
-            }
-        });
+        textView = root.findViewById(R.id.text_home);
+
         return root;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        view.findViewById(R.id.button_home).setOnClickListener(new View.OnClickListener() {
+        usuariosRest = APIUtils.getUsuService();
+        Call<List<Usuario>> call = usuariosRest.findAll();
+        call.enqueue(new Callback<List<Usuario>>() {
             @Override
-            public void onClick(View view) {
-                HomeFragmentDirections.ActionHomeFragmentToHomeSecondFragment action =
-                        HomeFragmentDirections.actionHomeFragmentToHomeSecondFragment
-                                ("From HomeFragment");
-                NavHostFragment.findNavController(HomeFragment.this)
-                        .navigate(action);
+            public void onResponse(Call<List<Usuario>> call, final Response<List<Usuario>> response) {
+                final List<Usuario> lista = response.body();
+
+                textView.setText(lista.get(0).toString());
+                System.out.println("ESPRACING: "+lista.get(0).toString());
+            }
+
+            @Override
+            public void onFailure(Call<List<Usuario>> call, Throwable t) {
+
             }
         });
     }
